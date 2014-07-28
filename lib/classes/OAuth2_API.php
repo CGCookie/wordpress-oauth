@@ -119,15 +119,19 @@ switch($method){
 		$user_id = $data['user_id'];
 		
 		global $wpdb;
-		$info = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}users WHERE ID = ".$user_id."");
+		$info = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}users WHERE ID = ".$user_id."", ARRAY_A);
 
 		// don't send sensitive info accross the wire.
-		unset($info->user_pass);
-		unset($info->user_activation_key);
+		unset($info['user_pass']);
+		unset($info['user_activation_key']);
+
+		//Logbook:  encode roles for users.
+		//$roles = ppc_get_roles('user', $user_id);
+		$roles = pp_get_groups_for_user($user_id);
 
 		header('Cache-Control: no-cache, must-revalidate');
 		header('Content-type: application/json');
-		print_r(json_encode($info));
+		print_r(json_encode(array_merge($info, array('roles' => $roles))));
 		
 	} catch (OAuth2ServerException $oauthError) {
 		$oauthError->sendHttpResponse();
